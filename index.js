@@ -25,15 +25,8 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API to get all data
-  if (pathname === '/') {
-    res.writeHead(200, {
-      'Content-type': 'application/json'
-    });
-    res.end(data);
-
-    // API to list PGN files
-  } else if (pathname === '/api/pgn-files') {
+  // API to list PGN files
+  if (pathname === '/api/pgn-files') {
     fs.readdir(PGN_DIR, (err, files) => {
       if (err) {
         res.writeHead(500, { 'Content-type': 'application/json' });
