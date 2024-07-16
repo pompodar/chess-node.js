@@ -2,6 +2,7 @@ const fs = require('fs');
 const http = require('http');
 const url = require('url');
 const path = require('path');
+const multiparty = require('multiparty');
 
 const PGN_DIR = path.join(__dirname, 'pgn-files');
 
@@ -25,8 +26,8 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API to list PGN files
   if (pathname === '/api/pgn-files') {
+    // API to list PGN files
     fs.readdir(PGN_DIR, (err, files) => {
       if (err) {
         res.writeHead(500, { 'Content-type': 'application/json' });
@@ -42,8 +43,8 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify({ files: pgnFiles }));
     });
 
-    // API to serve a specific PGN file
   } else if (pathname.startsWith('/api/pgn-files/')) {
+    // API to serve a specific PGN file
     const fileName = pathname.split('/').pop();
     const filePath = path.join(PGN_DIR, fileName);
 
@@ -58,8 +59,33 @@ const server = http.createServer((req, res) => {
       res.end(fileContent);
     });
 
-    // Not found
+  } else if (pathname === '/api/pgn-files' && req.method === 'POST') {
+    // API to save a PGN file
+    const form = new multiparty.Form();
+
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        res.writeHead(400, { 'Content-type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid form data' }));
+        return;
+      }
+
+      const file = files.file[0];
+      const filePath = path.join(PGN_DIR, file.originalFilename);
+
+      fs.copyFile(file.path, filePath, (err) => {
+        if (err) {
+          res.writeHead(500, { 'Content-type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to save file' }));
+          return;
+        }
+
+        res.writeHead(200, { 'Content-type': 'application/json' });
+        res.end(JSON.stringify({ message: 'File uploaded successfully' }));
+      });
+    });
   } else {
+    // Not found
     res.writeHead(404, {
       'Content-type': 'text/html',
       'my-own-header': 'hello-world'
