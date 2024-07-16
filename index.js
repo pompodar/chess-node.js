@@ -28,6 +28,9 @@ const server = http.createServer((req, res) => {
 
   if (pathname === '/api/pgn-files' && req.method === 'GET') {
     // API to list PGN files
+    const { search = '', page = 1, limit = 1 } = query;
+    const offset = (page - 1) * limit;
+
     fs.readdir(PGN_DIR, (err, files) => {
       if (err) {
         res.writeHead(500, { 'Content-type': 'application/json' });
@@ -35,12 +38,19 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      const pgnFiles = files.filter(file => path.extname(file) === '.pgn').map(file => ({
-        fileName: file,
-        friendlyName: convertFileNameToFriendlyName(file)
-      }));
+      const pgnFiles = files
+        .filter(file => path.extname(file) === '.pgn')
+        .map(file => ({
+          fileName: file,
+          friendlyName: convertFileNameToFriendlyName(file)
+        }))
+        .filter(file => file.friendlyName.toLowerCase().includes(search.toLowerCase()));
+
+      const paginatedFiles = pgnFiles.slice(offset, offset + limit);
+      const totalPages = Math.ceil(pgnFiles.length / limit);
+
       res.writeHead(200, { 'Content-type': 'application/json' });
-      res.end(JSON.stringify({ files: pgnFiles }));
+      res.end(JSON.stringify({ files: paginatedFiles, totalPages, currentPage: page }));
     });
 
   } else if (pathname.startsWith('/api/pgn-files/')) {
