@@ -26,7 +26,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (pathname === '/api/pgn-files') {
+  if (pathname === '/api/pgn-files' && req.method === 'GET') {
     // API to list PGN files
     fs.readdir(PGN_DIR, (err, files) => {
       if (err) {
@@ -44,7 +44,7 @@ const server = http.createServer((req, res) => {
     });
 
   } else if (pathname.startsWith('/api/pgn-files/')) {
-    // API to serve a specific PGN file
+    // API to get a PGN file
     const fileName = pathname.split('/').pop();
     const filePath = path.join(PGN_DIR, fileName);
 
@@ -59,7 +59,7 @@ const server = http.createServer((req, res) => {
       res.end(fileContent);
     });
 
-  } else if (pathname === '/api/pgn-files' && req.method === 'POST') {
+  } else if (pathname === '/api/pgn-files-save') {
     // API to save a PGN file
     const form = new multiparty.Form();
 
