@@ -28,7 +28,7 @@ const server = http.createServer((req, res) => {
 
   if (pathname === '/api/pgn-files' && req.method === 'GET') {
     // API to list PGN files
-    const { search = '', page = 1, limit = 1 } = query;
+    const { search = '', page = 1, limit = 3 } = query;
     const offset = (page - 1) * limit;
 
     fs.readdir(PGN_DIR, (err, files) => {
